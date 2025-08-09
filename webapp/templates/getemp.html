@@ -1,27 +1,48 @@
-	<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
-	<title>Get Employee Information</title>
+<title>Get Employee Information</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: avenir, Arial, sans-serif;
+    color: black;
+    background-image: url("{{ bg_url }}");
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+  }
+  header {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 16px;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+  }
+  form {
+    background: rgba(255, 255, 255, 0.85);
+    padding: 20px;
+    border-radius: 10px;
+  }
+</style>
 </head>
+<body>
+<header>
+  {{ group_name }} — {{ group_slogan }}
+</header>
+
 <center>
-	<font color="black" size="5" style="font-family: avenir">
+  <h1 style="color: DodgerBlue;">Employee Information</h1>
 
-		<h1 style="color: DodgerBlue">Employee Information</h1>
+  <form action="/fetchdata" autocomplete="on" method="POST">
+    <h2 style="color: grey;">Enter Employee ID</h2>
 
-		<body style="background: {{ color }};">
+    Employee ID:<br>
+    <input style="height:25px;font-size:14pt;" type="number" name="emp_id" autofocus size="40"><br><br>
 
-			<form action="/fetchdata" autocomplete="on" method="POST">
-
-				<h2 style="color: grey">Enter Employee ID</h2>
-
-		  		Employee ID:<br> <input style="height:25px;font-size:14pt;" type="number" name="emp_id" autofocus size="40"><br><br>
-
-
-		  		<button type="submit" style="background: grey; height: 45px; width: 200px; color: white; size: 5; font:oblique;">FETCH INFO</button><br><br>
-
-			</form>
-
-		</body>
-	</font>
+    <button type="submit" style="background: grey; height: 45px; width: 200px; color: white; font: oblique;">FETCH INFO</button><br><br>
+  </form>
 </center>
+</body>
 </html>

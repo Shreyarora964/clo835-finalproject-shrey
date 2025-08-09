@@ -1,35 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Employee Information</title>
+<title>Employee Information</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: avenir, Arial, sans-serif;
+    color: black;
+    background-image: url("{{ bg_url }}");
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+  }
+  header {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 16px;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+  }
+  form {
+    background: rgba(255, 255, 255, 0.85);
+    padding: 20px;
+    border-radius: 10px;
+  }
+</style>
 </head>
+<body>
+<header>
+  {{ group_name }} — {{ group_slogan }}
+</header>
+
 <center>
-	<font color="black" size="5" style="font-family: avenir">
+  <h1 style="color: DodgerBlue;">Employee Information</h1>
 
-		<h1 style="color: DodgerBlue">Employee Information</h1>
+  <form>
+    <div>
+      Employee ID:<br> {{ id }} <br><br>
+      First Name:<br> {{ fname }} <br><br>
+      Last Name:<br> {{ lname }} <br><br>
+      Primary Interest:<br> {{ interest }} <br><br>
+      Location:<br> {{ location }} <br><br>
+    </div>
+  </form>
 
-		<body style="background: {{ color }};">
-
-			<form>
-
-				<div>
-
-			  		Employee ID:<br> {{ id }} <br><br>
-
-			  		First Name:<br> {{ fname }} <br><br>
-
-			  		Last Name:<br> {{ lname }} <br><br>
-
-			  		Primary Interest:<br> {{ interest }} <br><br>
-
-			  		Location:<br> {{ location }} <br><br>
-			  		
-			  	</div>
-
-			</form>
-			<a href="{{ url_for('home') }}">Back</a>
-		</body>
-
-	</font>
+  <a href="{{ url_for('home') }}" style="color: white; font-size: 18px;">Back</a>
 </center>
+</body>
 </html>
