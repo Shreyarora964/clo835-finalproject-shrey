@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-pod
+  namespace: webapp-ns
+  labels:
+    app: employees
+spec:
+  containers:
+  - name: webapp
+    image: 167239449235.dkr.ecr.us-east-1.amazonaws.com/webapp-repo
+    ports:
+    - containerPort: 8080
+    env:
+    - name: DBHOST
+      value: "mysql.mysql-ns.svc.cluster.local"
+    - name: DBPWD
+      value: "root"
+    - name: APP_COLOR
+      value: "blue"
+  imagePullSecrets:
+  - name: regcred
