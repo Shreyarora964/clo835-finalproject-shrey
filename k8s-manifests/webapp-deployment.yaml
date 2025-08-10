@@ -1,29 +1,102 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: webapp-deployment
-  namespace: webapp-ns
+  name: webapp
+  namespace: fp
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: employees
+      app: webapp
   template:
     metadata:
       labels:
-        app: employees
+        app: webapp
     spec:
-      containers:
-      - name: webapp
-        image: 167239449235.dkr.ecr.us-east-1.amazonaws.com/webapp-repo:v4
-        ports:
-        - containerPort: 8080
-        env:
-        - name: DBHOST
-          value: "mysql.mysql-ns.svc.cluster.local"
-        - name: DBPWD
-          value: "root"
-        - name: APP_COLOR
-          value: "blue"
+      serviceAccountName: clo835-sa
       imagePullSecrets:
-      - name: regcred
+        - name: ecr-pull
+      containers:
+        - name: webapp
+          image: 167239449235.dkr.ecr.us-east-1.amazonaws.com/final-webapp:v1
+          ports:
+            - containerPort: 81
+          env:
+            # ---- AWS creds for private S3 ----
+            - name: AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: aws-creds
+                  key: AWS_REGION
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-creds
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-creds
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_SESSION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: aws-creds
+                  key: AWS_SESSION_TOKEN
+
+            # ---- App config from ConfigMap ----
+            - name: S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: S3_BUCKET
+            - name: BG_IMAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: BG_IMAGE
+            - name: GROUP_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: GROUP_NAME
+            - name: GROUP_SLOGAN
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: GROUP_SLOGAN
+
+            # ---- DB connection ----
+            - name: DBHOST
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: DBHOST
+            - name: DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: DATABASE
+            - name: DBUSER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: DBUSER
+            - name: DBPWD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: DBPWD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp
+  namespace: fp
+spec:
+  type: LoadBalancer
+  selector:
+    app: webapp
+  ports:
+    - port: 81
+      targetPort: 81

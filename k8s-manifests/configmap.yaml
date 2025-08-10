@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config
+  namespace: fp
+data:
+  S3_BUCKET: "clo835-final-bg-1754777998"
+  BG_IMAGE: "window.png"               # change if you want a different image
+  GROUP_NAME: "Shrey's Group"
+  GROUP_SLOGAN: "Deploying Innovation with CLO835"
+  DBHOST: "mysql.fp.svc.cluster.local"
+  DATABASE: "employees"

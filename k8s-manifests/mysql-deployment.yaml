@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql-deployment
-  namespace: mysql-ns
+  name: mysql
+  namespace: fp
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: mysql
@@ -13,13 +13,40 @@ spec:
       labels:
         app: mysql
     spec:
+      serviceAccountName: clo835-sa
       containers:
-      - name: mysql
-        image: 167239449235.dkr.ecr.us-east-1.amazonaws.com/mysql-repo:latest
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          value: "root"
-        ports:
-        - containerPort: 3306
-      imagePullSecrets:
-      - name: regcred
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_DATABASE
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: fp
+spec:
+  type: ClusterIP
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      targetPort: 3306
