@@ -1,1 +1,2 @@
 k8s-manifests/secrets.yaml
+kubeseal
