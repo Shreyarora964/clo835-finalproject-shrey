@@ -16,77 +16,91 @@ spec:
       serviceAccountName: clo835-sa
       imagePullSecrets:
         - name: ecr-pull
+      volumes:
+        - name: static-vol
+          emptyDir: {}
+      initContainers:
+        - name: fetch-bg
+          image: public.ecr.aws/aws-cli/aws-cli:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: AWS_REGION
+              valueFrom: { secretKeyRef: { name: aws-creds, key: AWS_REGION } }
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom: { secretKeyRef: { name: aws-creds, key: AWS_ACCESS_KEY_ID } }
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: aws-creds, key: AWS_SECRET_ACCESS_KEY } }
+            - name: AWS_SESSION_TOKEN
+              valueFrom: { secretKeyRef: { name: aws-creds, key: AWS_SESSION_TOKEN } }
+            - name: S3_BUCKET
+              valueFrom: { configMapKeyRef: { name: webapp-config, key: S3_BUCKET } }
+            - name: BG_IMAGE
+              valueFrom: { configMapKeyRef: { name: webapp-config, key: BG_IMAGE } }
+          command: ["/bin/sh","-lc"]
+          args:
+            - |
+              set -e
+              mkdir -p /workdir
+              echo "Fetching s3://$S3_BUCKET/$BG_IMAGE ..."
+              aws s3 cp "s3://$S3_BUCKET/$BG_IMAGE" /workdir/background.jpg
+              ls -lh /workdir
+          volumeMounts:
+            - name: static-vol
+              mountPath: /workdir
       containers:
         - name: webapp
           image: 167239449235.dkr.ecr.us-east-1.amazonaws.com/final-webapp:v1
+          imagePullPolicy: Always
           ports:
             - containerPort: 81
           env:
             # ---- AWS creds for private S3 ----
             - name: AWS_REGION
-              valueFrom:
-                secretKeyRef:
-                  name: aws-creds
-                  key: AWS_REGION
+              valueFrom: { secretKeyRef: { name: aws-creds, key: AWS_REGION } }
             - name: AWS_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: aws-creds
-                  key: AWS_ACCESS_KEY_ID
+              valueFrom: { secretKeyRef: { name: aws-creds, key: AWS_ACCESS_KEY_ID } }
             - name: AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: aws-creds
-                  key: AWS_SECRET_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: aws-creds, key: AWS_SECRET_ACCESS_KEY } }
             - name: AWS_SESSION_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: aws-creds
-                  key: AWS_SESSION_TOKEN
+              valueFrom: { secretKeyRef: { name: aws-creds, key: AWS_SESSION_TOKEN } }
 
             # ---- App config from ConfigMap ----
             - name: S3_BUCKET
-              valueFrom:
-                configMapKeyRef:
-                  name: webapp-config
-                  key: S3_BUCKET
+              valueFrom: { configMapKeyRef: { name: webapp-config, key: S3_BUCKET } }
             - name: BG_IMAGE
-              valueFrom:
-                configMapKeyRef:
-                  name: webapp-config
-                  key: BG_IMAGE
+              valueFrom: { configMapKeyRef: { name: webapp-config, key: BG_IMAGE } }
             - name: GROUP_NAME
-              valueFrom:
-                configMapKeyRef:
-                  name: webapp-config
-                  key: GROUP_NAME
+              valueFrom: { configMapKeyRef: { name: webapp-config, key: GROUP_NAME } }
             - name: GROUP_SLOGAN
-              valueFrom:
-                configMapKeyRef:
-                  name: webapp-config
-                  key: GROUP_SLOGAN
+              valueFrom: { configMapKeyRef: { name: webapp-config, key: GROUP_SLOGAN } }
 
-            # ---- DB connection ----
+            # ---- DB connection (ok to ignore for now) ----
             - name: DBHOST
-              valueFrom:
-                configMapKeyRef:
-                  name: webapp-config
-                  key: DBHOST
+              valueFrom: { configMapKeyRef: { name: webapp-config, key: DBHOST } }
             - name: DATABASE
-              valueFrom:
-                configMapKeyRef:
-                  name: webapp-config
-                  key: DATABASE
+              valueFrom: { configMapKeyRef: { name: webapp-config, key: DATABASE } }
             - name: DBUSER
-              valueFrom:
-                secretKeyRef:
-                  name: db-secrets
-                  key: DBUSER
+              valueFrom: { secretKeyRef: { name: db-secrets, key: DBUSER } }
             - name: DBPWD
-              valueFrom:
-                secretKeyRef:
-                  name: db-secrets
-                  key: DBPWD
+              valueFrom: { secretKeyRef: { name: db-secrets, key: DBPWD } }
+
+          # Remove inline "background: {{ color }};" that overrides the image
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -lc
+                  - |
+                    for f in /app/templates/*.html; do
+                      [ -f "$f" ] || continue
+                      sed -i 's/body style="background: {{ color }};"/body/g' "$f"
+                    done
+
+          volumeMounts:
+            - name: static-vol
+              mountPath: /app/static
+
 ---
 apiVersion: v1
 kind: Service
